@@ -3,17 +3,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Keep weights folder, ignore files inside
-weights/*
-!weights/.gitkeep
-
-# If weights is inside detectModels/
-detectModels/weights/*
-!detectModels/weights/.gitkeep
-
-# Large files
+# Ignore large model/video files
 *.bin
 *.mp4
 *.pt
 *.pth
 *.onnx
+
+# Ignore files inside weights, but allow txt and gitkeep
+detectModels/weights/*
+!detectModels/weights/
+!detectModels/weights/*.txt
+!detectModels/weights/.gitkeep
