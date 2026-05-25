@@ -14,7 +14,7 @@ INPUT_DIR = "imgs"
 OUTPUT_DIR = "output"
 
 IMAGE_EXTS = {
-    ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"
+    ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp",".bmp",
 }
 
 
