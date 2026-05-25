@@ -3,9 +3,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Model weights / large files
-weights/
-*.bin
+# Keep weights folder, ignore files inside
+weights/*
+!weights/.gitkeep
 
-# Video files
+# If weights is inside detectModels/
+detectModels/weights/*
+!detectModels/weights/.gitkeep
+
+# Large files
+*.bin
 *.mp4
+*.pt
+*.pth
+*.onnx
