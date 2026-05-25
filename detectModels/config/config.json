@@ -1,0 +1,35 @@
+{
+    "size_check":60,
+    
+    "cam1":{
+        "conf_thres": 0.6,
+        "iou_thres": 0.3,
+        "img_size": 1280
+        
+    },
+    "cam2":{
+        "conf_thres": 0.6,
+        "iou_thres": 0.3,
+        "img_size": 1280
+    },
+    "cam3":{
+        "conf_thres": 0.6,
+        "iou_thres": 0.3,
+        "img_size": 1280
+    },
+    "cam4":{
+        "conf_thres": 0.6,
+        "iou_thres": 0.3,
+        "img_size": 1280
+    },
+    "cam5":{
+        "conf_thres": 0.6,
+        "iou_thres": 0.3,
+        "img_size": 1280
+    },
+    "cam6":{
+        "conf_thres": 0.6,
+        "iou_thres": 0.3,
+        "img_size": 1280
+    }
+}
