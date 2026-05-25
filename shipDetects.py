@@ -103,7 +103,7 @@ class MainDetects:
         nowName = nowName.strip().lower().replace(" ", "")
         w = wh[0]
         h = wh[1]
-        if w > size_threshold and h > size_threshold:
+        if w > 0 and h > 0:
             if nowName in  [
                 "ship",
                 "tanker",

@@ -18,8 +18,13 @@ from pathlib import Path
 # tkfilebrowser 支援多選資料夾，但不是所有環境都一定有安裝
 # ============================================================
 try:
+    if sys.platform == "darwin":
+        os.environ.setdefault("LANG", "en_US.UTF-8")
+        os.environ.setdefault("LC_ALL", "en_US.UTF-8")
+
     import tkfilebrowser
-except ImportError:
+
+except Exception:
     tkfilebrowser = None
 
 
