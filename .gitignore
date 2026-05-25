@@ -9,7 +9,7 @@ __pycache__/
 *.pt
 *.pth
 *.onnx
-
+.venv/
 # Ignore files inside weights, but allow txt and gitkeep
 detectModels/weights/*
 !detectModels/weights/
