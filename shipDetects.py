@@ -9,6 +9,7 @@ from detectModels.utils.general import non_max_suppression, scale_coords, xyxy2x
 from detectModels.models.experimental import attempt_load
 from detectModels.utils.torch_utils import select_device
 import json
+
 FILE = os.path.abspath(__file__)
 
 detectModels_ROOT = os.path.join(os.path.dirname(FILE), 'detectModels')

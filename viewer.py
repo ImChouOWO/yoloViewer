@@ -13,8 +13,19 @@ from PIL import Image, ImageTk
 from shipDetects import MainDetects
 from pathlib import Path
 
+# ============================================================
+# optional import
+# tkfilebrowser 支援多選資料夾，但不是所有環境都一定有安裝
+# ============================================================
+try:
+    import tkfilebrowser
+except ImportError:
+    tkfilebrowser = None
+
+
 root = Path(__file__).parent
 weights = root / "detectModels" / "weights" / "best_0511.pt"
+
 IMAGE_EXTS = {
     ".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"
 }
@@ -73,12 +84,19 @@ class YOLOFolderViewer:
 
         self.btn_add_folders = tk.Button(
             top_frame,
-            text="匯入資料夾",
+            text="匯入多個資料夾",
             command=self.add_multiple_folders,
             width=20
         )
         self.btn_add_folders.pack(side=tk.LEFT, padx=5)
 
+        self.btn_add_single_folder = tk.Button(
+            top_frame,
+            text="匯入單一資料夾",
+            command=self.add_single_folder,
+            width=18
+        )
+        self.btn_add_single_folder.pack(side=tk.LEFT, padx=5)
 
         self.btn_load_selected = tk.Button(
             top_frame,
@@ -182,14 +200,12 @@ class YOLOFolderViewer:
         right_frame = tk.LabelFrame(main_frame, text="目前圖片資訊 / bbox 顯示控制")
         right_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
-        # 右側上半部：圖片資訊
         info_frame = tk.LabelFrame(right_frame, text="圖片資訊")
         info_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5)
 
         self.info_text = tk.Text(info_frame, width=45, height=20)
         self.info_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # 右側下半部：bbox 控制
         bbox_control_frame = tk.LabelFrame(right_frame, text="bbox 個別顯示")
         bbox_control_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=5, pady=5)
 
@@ -312,34 +328,114 @@ class YOLOFolderViewer:
                 return []
 
             folders = [
-                line.strip()
+                os.path.abspath(line.strip())
                 for line in result.stdout.splitlines()
                 if line.strip()
             ]
 
             return folders
 
-        except Exception as e:
-            self.show_error("多資料夾選擇錯誤", str(e))
+        except Exception:
             return []
+
+    # ============================================================
+    # tkfilebrowser 多資料夾選擇
+    # Windows / Linux 可用
+    # ============================================================
+    def select_multiple_folders_tkfilebrowser(self):
+        try:
+            if tkfilebrowser is None:
+                return []
+
+            folders = tkfilebrowser.askopendirnames(
+                parent=self.root,
+                title="選擇多個圖片資料夾"
+            )
+
+            if not folders:
+                return []
+
+            return [
+                os.path.abspath(folder)
+                for folder in folders
+                if folder
+            ]
+
+        except Exception:
+            return []
+
+    # ============================================================
+    # fallback 多資料夾選擇
+    # 不是真正 Ctrl 多選，而是連續選取多個資料夾
+    # 優點：不需要額外套件，Windows/macOS/Linux 都可用
+    # ============================================================
+    def select_multiple_folders_fallback(self):
+        folders = []
+
+        try:
+            while True:
+                folder = filedialog.askdirectory(
+                    parent=self.root,
+                    title="選擇圖片資料夾"
+                )
+
+                if not folder:
+                    break
+
+                folder = os.path.abspath(folder)
+
+                if folder not in folders:
+                    folders.append(folder)
+
+                keep_selecting = messagebox.askyesno(
+                    "繼續選擇",
+                    "是否要繼續加入其他資料夾？"
+                )
+
+                if not keep_selecting:
+                    break
+
+            return folders
+
+        except Exception as e:
+            self.show_error("資料夾選擇錯誤", str(e))
+            return []
+
+    # ============================================================
+    # 自動選擇多資料夾模式
+    # ============================================================
+    def select_multiple_folders_auto(self):
+        folders = []
+
+        # macOS 優先使用 osascript
+        if sys.platform == "darwin":
+            folders = self.select_multiple_folders_macos()
+
+            if folders:
+                self.set_status("使用 macOS 原生多資料夾選擇模式")
+                return folders
+
+        # Windows / Linux / macOS fallback 皆可嘗試 tkfilebrowser
+        folders = self.select_multiple_folders_tkfilebrowser()
+
+        if folders:
+            self.set_status("使用 tkfilebrowser 多資料夾選擇模式")
+            return folders
+
+        # 最後退回 Tkinter 連續選取模式
+        self.set_status("使用 Tkinter 連續選取資料夾模式")
+        folders = self.select_multiple_folders_fallback()
+
+        return folders
 
     # ============================================================
     # 資料夾操作
     # ============================================================
     def add_multiple_folders(self):
-        folders = []
-
-        if sys.platform == "darwin":
-            folders = self.select_multiple_folders_macos()
-        else:
-            self.show_warning(
-                "提示",
-                "目前一次選取多個資料夾的功能主要支援 macOS。\n"
-                "其他系統請使用「匯入單一資料夾」重複加入。"
-            )
-            return
+        folders = self.select_multiple_folders_auto()
 
         if not folders:
+            self.set_status("未選擇任何資料夾")
             return
 
         added_count = 0
@@ -351,10 +447,13 @@ class YOLOFolderViewer:
             if len(self.folder_paths) > before_count:
                 added_count += 1
 
-        self.set_status(f"已一次匯入 {added_count} 個資料夾")
+        self.set_status(f"已匯入 {added_count} 個資料夾")
 
     def add_single_folder(self):
-        folder = filedialog.askdirectory(title="選擇圖片資料夾")
+        folder = filedialog.askdirectory(
+            parent=self.root,
+            title="選擇圖片資料夾"
+        )
 
         if not folder:
             return
@@ -669,7 +768,6 @@ class YOLOFolderViewer:
 
                 label = f"{cls_name} {conf:.2f}"
 
-                # bbox 顏色
                 box_color = (0, 255, 0)
 
                 cv2.rectangle(
@@ -699,7 +797,6 @@ class YOLOFolderViewer:
                 text_x = x1
                 text_y = y1 - 12
 
-                # 如果框太靠上，文字改放到框內上方
                 if text_y - text_h - baseline < 0:
                     text_y = y1 + text_h + 12
 
@@ -713,7 +810,6 @@ class YOLOFolderViewer:
                 bg_x2 = min(w - 1, bg_x2)
                 bg_y2 = min(h - 1, bg_y2)
 
-                # 黑底
                 cv2.rectangle(
                     frame,
                     (bg_x1, bg_y1),
@@ -722,7 +818,6 @@ class YOLOFolderViewer:
                     -1
                 )
 
-                # 白字
                 cv2.putText(
                     frame,
                     label,

@@ -1,24 +1,31 @@
 # yoloViewer / YOLOv7 Windows Python 3.12 environment
-
-opencv-python==4.8.1.78
-Pillow==10.2.0
-matplotlib==3.7.5
+# Core image / array
+opencv-python==4.10.0.84
+Pillow==10.4.0
 numpy==1.26.4
-
+# Plot / data utils
+matplotlib==3.9.2
 scipy==1.13.1
-PyYAML==6.0.1
-tqdm==4.66.1
-requests==2.31.0
 pandas==2.2.2
 seaborn==0.13.2
-
+# YOLOv7 common dependencies
+PyYAML==6.0.2
+tqdm==4.66.5
+requests==2.32.3
+psutil==6.0.0
+thop==0.1.1.post2209072238
 # GUI
 tkfilebrowser==2.3.2
 
-# model / utils
-torch>=2.2.0
-torchvision>=0.17.0
 
-# optional but commonly used by YOLOv7
-psutil
-thop
+# PyTorch
+
+# 建議依照你的 CUDA / CPU 環境另外安裝
+# CPU:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+#
+# CUDA 12.1:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# CUDA 12.4:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
