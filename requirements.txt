@@ -1,18 +1,24 @@
-# yoloViewer minimal requirements
-# Based on current pip list and actual imports in viewer.py / shipDetects.py / detectModels
+# yoloViewer / YOLOv7 Windows Python 3.12 environment
 
-opencv-python==4.11.0.86
-pillow==12.0.0
-numpy==2.4.2
+opencv-python==4.8.1.78
+Pillow==10.2.0
+matplotlib==3.7.5
+numpy==1.26.4
 
-torch==2.10.0
-torchvision==0.25.0
-
-PyYAML==6.0.3
-requests==2.32.5
-tqdm==4.67.1
-
-pandas==2.3.3
-matplotlib==3.10.8
+scipy==1.13.1
+PyYAML==6.0.1
+tqdm==4.66.1
+requests==2.31.0
+pandas==2.2.2
 seaborn==0.13.2
-scipy==1.16.3
+
+# GUI
+tkfilebrowser==2.3.2
+
+# model / utils
+torch>=2.2.0
+torchvision>=0.17.0
+
+# optional but commonly used by YOLOv7
+psutil
+thop
