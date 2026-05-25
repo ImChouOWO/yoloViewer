@@ -103,7 +103,7 @@ class MainDetects:
         nowName = nowName.strip().lower().replace(" ", "")
         w = wh[0]
         h = wh[1]
-        if w > 0 and h > 0:
+        if w > 30 and h > 30:
             if nowName in  [
                 "ship",
                 "tanker",
@@ -170,7 +170,7 @@ class MainDetects:
 
         with torch.no_grad():
             pred = self.model(img)[0]
-            pred = non_max_suppression(pred, self.conf_thres, self.iou_thres)[0]
+            pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, agnostic=True)[0]
 
         result = []
         if pred is not None and len(pred):

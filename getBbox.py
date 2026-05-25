@@ -2,18 +2,14 @@ import os
 from pathlib import Path
 
 import cv2
+from tqdm import tqdm
 
-# 依你的檔名調整：
-# 如果 MainDetects 在 shipDetects.py
 from shipDetects import MainDetects
+from pathlib import Path
+root = Path(__file__).parent
+weights = root / "detectModels" / "weights" / "best_0511.pt"
 
-# 如果 MainDetects 在 viewer.py，改成：
-# from viewer import MainDetects
 
-
-# =========================
-# 使用者設定
-# =========================
 INPUT_DIR = "imgs"
 OUTPUT_DIR = "output"
 
@@ -22,9 +18,7 @@ IMAGE_EXTS = {
 }
 
 
-# =========================
-# 繪製黑底白字
-# =========================
+
 def draw_black_label(
     image,
     text,
@@ -84,9 +78,7 @@ def draw_black_label(
     )
 
 
-# =========================
-# 渲染單張圖片
-# =========================
+
 def render_detection_result(image, detections):
     for det in detections:
         cx = float(det["x"])
@@ -112,7 +104,7 @@ def render_detection_result(image, detections):
         )
 
         # 黑底白字：cls / w / x
-        label = f"cls: {cls_name} | w: {int(w)} | x: {int(cx)} | conf: {conf:.3f}"
+        label = f"cls: {cls_name} | w: {int(w)} | h: {int(h)}"
 
         draw_black_label(
             image=image,
@@ -127,9 +119,7 @@ def render_detection_result(image, detections):
     return image
 
 
-# =========================
-# 辨識資料夾內所有圖片
-# =========================
+
 def detect_folder(
     input_dir=INPUT_DIR,
     output_dir=OUTPUT_DIR,
@@ -139,7 +129,7 @@ def detect_folder(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     detector = MainDetects(
-        weights="./detectModels/weights/modelData.bin",
+        weights=weights,
         conf_thres=0.55,
         iou_thres=0.5,
         img_size=1280,
@@ -155,7 +145,7 @@ def detect_folder(
 
     results = []
 
-    for image_path in image_paths:
+    for image_path in tqdm(image_paths, desc="Detecting images"):
         image = cv2.imread(str(image_path))
 
         if image is None:
@@ -188,9 +178,7 @@ def detect_folder(
     return results
 
 
-# =========================
-# 被其他程式匯入時使用
-# =========================
+
 def run_detection():
     return detect_folder(
         input_dir=INPUT_DIR,
@@ -198,6 +186,6 @@ def run_detection():
     )
 
 
-# 不使用 CLI，只在直接執行此檔案時跑預設資料夾
+
 if __name__ == "__main__":
     run_detection()
