@@ -11,8 +11,10 @@ from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 
 from shipDetects import MainDetects
+from pathlib import Path
 
-
+root = Path(__file__).parent
+weights = root / "detectModels" / "weights" / "best_0511.pt"
 IMAGE_EXTS = {
     ".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"
 }
@@ -27,7 +29,7 @@ class YOLOFolderViewer:
         # =========================
         # YOLO 初始化設定
         # =========================
-        self.weights_path = "/Users/chou/Desktop/python/shipDetectspy_V1.0.5/pt/best_0511.pt"
+        self.weights_path = weights
         self.conf_thres = 0.55
         self.iou_thres = 0.5
         self.cam_index = 1
