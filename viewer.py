@@ -956,5 +956,6 @@ class YOLOFolderViewer:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    
     app = YOLOFolderViewer(root)
     root.mainloop()
