@@ -27,8 +27,8 @@ class MainDetects:
     def __init__(
         self,
         weights=f"{detectModels_ROOT}/weights/modelData.bin",
-        conf_thres=0.1,
-        iou_thres=0.45,
+        conf_thres=0.55,
+        iou_thres=0.5,
         img_size=1280,
         device='',
         camIndex: int = 0,
