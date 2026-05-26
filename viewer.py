@@ -29,7 +29,7 @@ except Exception:
 
 
 root = Path(__file__).parent
-weights = root / "detectModels" / "weights" / "best_0511.pt"
+weights = root / "detectModels" / "weights" / "best_0522.pt"
 
 IMAGE_EXTS = {
     ".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"
@@ -46,7 +46,7 @@ class YOLOFolderViewer:
         # YOLO 初始化設定
         # =========================
         self.weights_path = weights
-        self.conf_thres = 0.55
+        self.conf_thres = 0.4
         self.iou_thres = 0.5
         self.cam_index = 1
 
@@ -95,13 +95,13 @@ class YOLOFolderViewer:
         )
         self.btn_add_folders.pack(side=tk.LEFT, padx=5)
 
-        self.btn_add_single_folder = tk.Button(
+        self.btn_export_results = tk.Button(
             top_frame,
-            text="匯入單一資料夾",
-            command=self.add_single_folder,
+            text="匯出辨識結果",
+            command=self.export_results_dialog,
             width=18
         )
-        self.btn_add_single_folder.pack(side=tk.LEFT, padx=5)
+        self.btn_export_results.pack(side=tk.LEFT, padx=5)
 
         self.btn_load_selected = tk.Button(
             top_frame,
@@ -300,7 +300,8 @@ class YOLOFolderViewer:
                 weights=self.weights_path,
                 conf_thres=self.conf_thres,
                 iou_thres=self.iou_thres,
-                camIndex=self.cam_index
+                camIndex=self.cam_index,
+                img_size=1280
             )
 
             self.set_status("YOLO 模型載入完成")
@@ -432,6 +433,144 @@ class YOLOFolderViewer:
         folders = self.select_multiple_folders_fallback()
 
         return folders
+    
+    def export_results_dialog(self):
+        if self.yoClass is None:
+            self.show_warning("提示", "YOLO 模型尚未載入完成")
+            return
+
+        if self.is_running:
+            self.show_warning("提示", "目前仍在推論中，請稍後再匯出")
+            return
+
+        if not self.image_paths:
+            self.show_warning(
+                "提示",
+                "尚未載入圖片。請先匯入資料夾並按下「載入勾選資料夾」。"
+            )
+            return
+
+        output_dir = filedialog.askdirectory(
+            parent=self.root,
+            title="選擇匯出辨識結果的資料夾"
+        )
+
+        if not output_dir:
+            self.set_status("已取消匯出")
+            return
+
+        thread = threading.Thread(
+            target=self.export_results,
+            args=(output_dir,)
+        )
+        thread.daemon = True
+        thread.start()
+
+
+    def export_results(self, output_dir):
+        self.is_running = True
+
+        try:
+            output_dir = os.path.abspath(output_dir)
+            os.makedirs(output_dir, exist_ok=True)
+
+            total = len(self.image_paths)
+            success_count = 0
+            failed_count = 0
+
+            self.set_status(f"開始匯出辨識結果，共 {total} 張圖片...")
+
+            for idx, image_path in enumerate(self.image_paths, start=1):
+                self.set_status(
+                    f"正在匯出 {idx}/{total}：{os.path.basename(image_path)}"
+                )
+
+                frame = cv2.imread(image_path)
+
+                if frame is None:
+                    failed_count += 1
+                    continue
+
+                # 使用 GUI 當下已初始化的 YOLO 權重與參數
+                locations = self.yoClass.run(frame)
+
+                rendered = self.draw_results(
+                    frame.copy(),
+                    locations
+                )
+
+                output_path = self.build_export_output_path(
+                    image_path=image_path,
+                    output_dir=output_dir
+                )
+
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+                ok = cv2.imwrite(output_path, rendered)
+
+                if ok:
+                    success_count += 1
+                else:
+                    failed_count += 1
+
+            self.set_status(
+                f"匯出完成：成功 {success_count} 張，失敗 {failed_count} 張，輸出路徑：{output_dir}"
+            )
+
+            self.root.after(
+                0,
+                lambda: messagebox.showinfo(
+                    "匯出完成",
+                    f"成功匯出 {success_count} 張圖片\n"
+                    f"失敗 {failed_count} 張\n\n"
+                    f"輸出路徑：\n{output_dir}"
+                )
+            )
+
+        except Exception as e:
+            self.set_status("匯出失敗")
+            self.show_error("匯出錯誤", str(e))
+
+        finally:
+            self.is_running = False
+
+
+    def build_export_output_path(self, image_path, output_dir):
+        """
+        產生匯出檔案路徑。
+
+        若 image_path 來自已匯入的資料夾，會保留相對路徑，避免不同資料夾中同名圖片互相覆蓋。
+        例如：
+        input folder: /data/cam01
+        image:        /data/cam01/a/b/001.jpg
+        output:       /output/cam01/a/b/001.jpg
+        """
+        image_path = os.path.abspath(image_path)
+        output_dir = os.path.abspath(output_dir)
+
+        matched_folder = None
+
+        for folder in self.folder_paths:
+            folder_abs = os.path.abspath(folder)
+
+            try:
+                common = os.path.commonpath([image_path, folder_abs])
+            except ValueError:
+                continue
+
+            if common == folder_abs:
+                matched_folder = folder_abs
+                break
+
+        if matched_folder is not None:
+            folder_name = os.path.basename(matched_folder.rstrip(os.sep))
+            rel_path = os.path.relpath(image_path, matched_folder)
+            output_path = os.path.join(output_dir, folder_name, rel_path)
+        else:
+            output_path = os.path.join(output_dir, os.path.basename(image_path))
+
+        return output_path
+
 
     # ============================================================
     # 資料夾操作
@@ -771,7 +910,7 @@ class YOLOFolderViewer:
                 cls_name = obj.get("class", "unknown")
                 conf = float(obj.get("conf", 0.0))
 
-                label = f"{cls_name} {conf:.2f}"
+                label = f"{cls_name} | w:{int(bw)} h:{int(bh)}"
 
                 box_color = (0, 255, 0)
 
