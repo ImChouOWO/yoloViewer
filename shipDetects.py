@@ -105,7 +105,6 @@ class MainDetects:
         h = wh[1]
         if w > 40 and h > 40:
             if nowName in  [
-                "ship",
                 "tanker",
                 "container",
                 "bulkcarrier",
@@ -148,7 +147,7 @@ class MainDetects:
                 return "Small Craft"
 
             else:
-                return "Merchant Vessel"
+                return "Ship"
         else:
             return "Ship"
 
