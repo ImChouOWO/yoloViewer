@@ -103,7 +103,7 @@ class MainDetects:
         nowName = nowName.strip().lower().replace(" ", "")
         w = wh[0]
         h = wh[1]
-        if w > 40 and h > 40:
+        if w > size_threshold and h > size_threshold:
             if nowName in  [
                 "tanker",
                 "container",
@@ -184,7 +184,7 @@ class MainDetects:
                     "w": w,
                     "h": h,
                     "conf": round(float(conf), 3),
-                    "class": self.shiptypeAdj(self.names[cls + 1 if cls < 19 else cls], [w, h], self.size_check),
+                    "class": self.shiptypeAdj(self.names[cls], [w, h], self.size_check),
                 })
 
         if self._enable_log and self._log_locations:
